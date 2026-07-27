@@ -12,6 +12,7 @@ async function fetchInventory() {
         
         let currentPage = 1;
         let hasMoreItems = true;
+        let previousPageHtml = ""; // Тук ще пазим какво сме видели на миналата страница
 
         while (hasMoreItems) {
             const response = await fetch(`/api/proxy?userId=${USER_ID}&page=${currentPage}`);
@@ -22,10 +23,18 @@ async function fetchInventory() {
             const doc = parser.parseFromString(htmlText, 'text/html');
             const itemCards = doc.querySelectorAll('.card.bg-dark');
             
-            if (itemCards.length === 0) {
+            // Събираме съдържанието на текущата страница
+            let currentCardsHtml = "";
+            itemCards.forEach(c => currentCardsHtml += c.innerHTML);
+
+            // АКО няма предмети ИЛИ сървърът ни връща същата страница като преди малко -> СПИРАМЕ
+            if (itemCards.length === 0 || currentCardsHtml === previousPageHtml) {
                 hasMoreItems = false;
                 break;
             }
+            
+            // Запаметяваме текущата страница, за да я сравним със следващата
+            previousPageHtml = currentCardsHtml;
 
             itemCards.forEach(card => {
                 const body = card.querySelector('.card-body');
