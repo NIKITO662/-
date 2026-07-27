@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Inventory & Trade Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Инвентар Секция -->
+        <section class="inventory-section">
+            <div class="header">
+                <h2>nk88 Inventory</h2>
+                <h3 id="total-rap">Total RAP: Loading...</h3>
+            </div>
+            <div class="grid" id="inventory-grid">
+                <!-- Предметите ще се заредят тук чрез JavaScript -->
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- Трейд Калкулатор Секция -->
+        <section class="calculator-section">
+            <h2>Trade Calculator</h2>
+            <div class="trade-container">
+                <!-- Даваш (Offer) -->
+                <div class="trade-panel">
+                    <h3>Offer</h3>
+                    <div class="trade-slots" id="offer-slots">
+                        <!-- Избраните предмети -->
+                    </div>
+                    <div class="trade-totals">
+                        <p>Total Value: <span id="offer-value">0</span></p>
+                        <p>Total RAP: <span id="offer-rap">0</span></p>
+                    </div>
+                </div>
+
+                <!-- Получаваш (Request) -->
+                <div class="trade-panel">
+                    <h3>Request</h3>
+                    <div class="trade-slots" id="request-slots">
+                        <!-- Избраните предмети -->
+                    </div>
+                    <div class="trade-totals">
+                        <p>Total Value: <span id="request-value">0</span></p>
+                        <p>Total RAP: <span id="request-rap">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
