@@ -1,12 +1,13 @@
 export default async function handler(req, res) {
-    const { userId, page = 1 } = req.query;
+    const { path } = req.query;
     
-    if (!userId) {
-        return res.status(400).json({ error: 'Missing userId' });
+    if (!path) {
+        return res.status(400).json({ error: 'Missing path parameter' });
     }
 
     try {
-        const targetUrl = `https://www.pekora.zip/internal/collectibles?userId=${userId}&page=${page}`;
+        const safePath = path.startsWith('/') ? path : '/' + path;
+        const targetUrl = `https://www.pekora.zip${safePath}`;
         
         const response = await fetch(targetUrl, {
             headers: {
