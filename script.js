@@ -1,4 +1,4 @@
-const USER_API_URL = 'https://www.pekora.zip/internal/collectibles?userId=31241';
+const USER_ID = '31241';
 const inventoryGrid = document.getElementById('inventory-grid');
 const totalRapDisplay = document.getElementById('total-rap');
 
@@ -7,16 +7,15 @@ let requestItems = [];
 
 async function fetchInventory() {
     try {
-        // Използваме AllOrigins прокси, за да избегнем CORS защитата
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(USER_API_URL)}`;
-        const response = await fetch(proxyUrl);
+        // Вече викаме нашия собствен Vercel сървър!
+        const response = await fetch(`/api/proxy?userId=${USER_ID}`);
+        
+        if (!response.ok) throw new Error("Network response was not ok");
+        
         const htmlText = await response.text();
         
-        // Превръщаме върнатия текст в реален HTML документ
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
-        
-        // Намираме всички "картички" с предмети
         const itemCards = doc.querySelectorAll('.card.bg-dark');
         
         let totalRap = 0;
@@ -24,25 +23,20 @@ async function fetchInventory() {
 
         itemCards.forEach(card => {
             const body = card.querySelector('.card-body');
-            const paragraphs = body.querySelectorAll('p');
+            if(!body) return;
             
-            // Взимаме линка за картинката
+            const paragraphs = body.querySelectorAll('p');
             const imgEl = card.querySelector('img');
             const imgSrc = imgEl ? imgEl.src : '';
 
             if (paragraphs.length >= 2) {
                 const itemName = paragraphs[0].innerText;
-                
-                // Взимаме текста на RAP, махаме "RAP: " и запетаите, и го превръщаме в число
                 const rapText = paragraphs[1].innerText.replace('RAP: ', '').replace(/,/g, '').trim();
                 const itemRap = parseInt(rapText, 10) || 0;
                 
                 totalRap += itemRap;
-                
-                // Създаваме обект с данните за калкулатора
                 const itemObj = { name: itemName, rap: itemRap, assetThumbnailUrl: imgSrc };
 
-                // Генерираме визуализацията в нашия сайт
                 const myCard = document.createElement('div');
                 myCard.className = 'item-card';
                 myCard.innerHTML = `
@@ -51,16 +45,11 @@ async function fetchInventory() {
                     <div class="item-rap">RAP: ${itemRap.toLocaleString()}</div>
                 `;
                 
-                // Добавяме събитие при клик за прехвърляне в калкулатора
-                myCard.addEventListener('click', () => {
-                    addToOffer(itemObj);
-                });
-                
+                myCard.addEventListener('click', () => addToOffer(itemObj));
                 inventoryGrid.appendChild(myCard);
             }
         });
 
-        // Показваме общия изчислен RAP
         totalRapDisplay.innerText = `Total RAP: ${totalRap.toLocaleString()}`;
 
     } catch (error) {
@@ -83,7 +72,6 @@ function updateCalculatorUI() {
     let offerRap = 0;
 
     offerItems.forEach((item, index) => {
-        // Тук вече използваме item.rap вместо recentAveragePrice
         offerRap += item.rap || 0;
         
         const itemDiv = document.createElement('div');
