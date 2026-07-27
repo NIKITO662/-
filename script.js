@@ -11,30 +11,25 @@ async function fetchInventory() {
         inventoryGrid.innerHTML = '';
         
         let currentPage = 1;
-        let hasMoreItems = true;
-        let previousPageHtml = ""; // Тук ще пазим какво сме видели на миналата страница
-
-        while (hasMoreItems) {
-            const response = await fetch(`/api/proxy?userId=${USER_ID}&page=${currentPage}`);
+        // Започваме от главния път
+        let currentPath = `/internal/collectibles?userId=${USER_ID}`;
+        
+        while (currentPath) {
+            // Вече подаваме целия път към нашето прокси
+            const response = await fetch(`/api/proxy?path=${encodeURIComponent(currentPath)}`);
             if (!response.ok) throw new Error("Network response was not ok");
             
             const htmlText = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, 'text/html');
-            const itemCards = doc.querySelectorAll('.card.bg-dark');
             
-            // Събираме съдържанието на текущата страница
-            let currentCardsHtml = "";
-            itemCards.forEach(c => currentCardsHtml += c.innerHTML);
-
-            // АКО няма предмети ИЛИ сървърът ни връща същата страница като преди малко -> СПИРАМЕ
-            if (itemCards.length === 0 || currentCardsHtml === previousPageHtml) {
-                hasMoreItems = false;
+            // ФИКС ЗА АВАТАРА: Взимаме само картите, които са вътре в решетката (col-6...)
+            // Това предотвратява случайното взимане на профилната ти снимка отляво!
+            const itemCards = doc.querySelectorAll('.col-6.col-md-4.col-lg-2 .card.bg-dark');
+            
+            if (itemCards.length === 0) {
                 break;
             }
-            
-            // Запаметяваме текущата страница, за да я сравним със следващата
-            previousPageHtml = currentCardsHtml;
 
             itemCards.forEach(card => {
                 const body = card.querySelector('.card-body');
@@ -71,7 +66,21 @@ async function fetchInventory() {
                 }
             });
             
-            currentPage++;
+            // ФИКС ЗА СТРАНИЦИТЕ: Намираме точния линк за следващата страница директно от бутоните
+            let nextLinkFound = false;
+            const pageLinks = doc.querySelectorAll('.pagination .page-link');
+            for (let link of pageLinks) {
+                if (link.innerText.trim() === (currentPage + 1).toString()) {
+                    currentPath = link.getAttribute('href'); // Взимаме точния линк от техния сайт
+                    currentPage++;
+                    nextLinkFound = true;
+                    break;
+                }
+            }
+            
+            if (!nextLinkFound) {
+                currentPath = null; // Край на страниците
+            }
         }
 
         totalRapDisplay.innerText = `Total RAP: ${totalRap.toLocaleString()}`;
@@ -82,7 +91,6 @@ async function fetchInventory() {
     }
 }
 
-// Функции за калкулатора
 function addToOffer(item) {
     offerItems.push(item);
     updateCalculatorUI();
@@ -114,5 +122,4 @@ function updateCalculatorUI() {
     offerRapDisplay.innerText = offerRap.toLocaleString();
 }
 
-// Зареждане на данните при отваряне
 fetchInventory();
